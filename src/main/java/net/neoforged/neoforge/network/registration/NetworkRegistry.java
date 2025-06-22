@@ -208,6 +208,25 @@ public class NetworkRegistry {
             return BUILTIN_PAYLOADS.get(id);
         }
 
+        // Handle Fabric networking API compatibility - provide dummy codec for fabric:accepted_attachments_v1
+        if ("fabric".equals(id.getNamespace()) && "accepted_attachments_v1".equals(id.getPath())) {
+            LOGGER.debug("Providing Fabric networking API compatibility codec for: {}", id);
+            return StreamCodec.of(
+                (buf, payload) -> {
+                    // Handle Fabric networking API compatibility - skip encoding for unsupported payloads
+                    LOGGER.debug("Skipping Fabric networking API payload encoding: {}", id);
+                    // Write empty data to prevent protocol errors
+                    buf.writeVarInt(0);
+                },
+                buf -> {
+                    // Handle Fabric networking API compatibility - skip decoding for unsupported payloads
+                    LOGGER.debug("Skipping Fabric networking API payload decoding: {}", id);
+                    buf.readVarInt(); // Read the empty data we wrote
+                    return new net.minecraft.network.protocol.common.custom.DiscardedPayload(id);
+                }
+            );
+        }
+
         // Now ask the protocol what kind of payload is being sent and get the channel for it.
         if (PAYLOAD_REGISTRATIONS.containsKey(protocol)) {
             PayloadRegistration<?> registration = PAYLOAD_REGISTRATIONS.get(protocol).get(id);
