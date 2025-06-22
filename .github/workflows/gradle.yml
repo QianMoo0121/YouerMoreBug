@@ -57,7 +57,7 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ./build/libs/*.jar
+        files: projects/youer/build/libs/*-server.jar
         body: |
           ### Build Info ℹ️
           - Commit: ${{ steps.hash.outputs.hash }}
